@@ -1,0 +1,11 @@
+Nmap scan report for 192.168.1.38
+Host is up (0.065s latency).
+MAC Address: 5C:E9:31:E0:56:D9 (TP-Link Systems)
+
+Nmap scan report for 192.168.1.87
+Host is up (0.12s latency).
+MAC Address: 70:66:2A:58:34:52 (Sony Interactive Entertainment)
+
+Nmap scan report for dsldevice.lan (192.168.1.254)
+Host is up (0.0070s latency).
+MAC Address: 40:33:06:2F:98:F6 (Taicang T&W Electronics)

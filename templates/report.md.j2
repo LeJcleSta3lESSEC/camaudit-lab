@@ -1,0 +1,29 @@
+# CamAudit Report
+
+## Scope
+
+{{ scope }}
+
+## Executive Summary
+
+{{ executive_summary }}
+
+## Device Inventory
+
+{% for host in hosts %}
+- {{ host.ip }} — {{ host.vendor or "Unknown" }} — {{ host.mac_oui or "No OUI" }}
+{% endfor %}
+
+## Findings
+
+{% for finding in findings %}
+### {{ finding.title }}
+
+Severity: **{{ finding.severity }}**
+
+Evidence: {{ finding.evidence }}
+
+Explanation: {{ finding.explanation }}
+
+{% if finding.remediation %}Remediation: {{ finding.remediation }}{% endif %}
+{% endfor %}

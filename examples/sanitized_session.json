@@ -1,0 +1,36 @@
+{
+  "scope": "192.168.1.0/24 authorized family-owned LAN",
+  "authorized": true,
+  "hosts": [
+    {
+      "ip": "192.168.1.38",
+      "vendor": "TP-Link Systems",
+      "mac_oui": "5C:E9:31",
+      "candidate_type": "camera_candidate",
+      "open_ports": [443, 8443, 8800],
+      "notes": ["Local HTTPS JSON API observed", "RTSP standard ports closed"]
+    },
+    {
+      "ip": "192.168.1.87",
+      "vendor": "Sony Interactive Entertainment",
+      "mac_oui": "70:66:2A",
+      "candidate_type": "console",
+      "open_ports": [],
+      "notes": ["Not a camera candidate"]
+    }
+  ],
+  "findings": [
+    {
+      "title": "Local camera service exposure",
+      "severity": "Info/Low",
+      "evidence": "TCP/443 and TCP/8800 reachable from LAN",
+      "explanation": "Services are reachable locally but no unauthenticated feed or configuration access was confirmed."
+    },
+    {
+      "title": "RTSP standard ports closed",
+      "severity": "Positive",
+      "evidence": "TCP/554 and TCP/8554 closed",
+      "explanation": "Standard RTSP feed paths were not exposed during the audit."
+    }
+  ]
+}
