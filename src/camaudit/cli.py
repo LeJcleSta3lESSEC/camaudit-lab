@@ -6,8 +6,10 @@ from pathlib import Path
 import typer
 from rich.console import Console
 from rich.panel import Panel
+from rich.table import Table
 
 from camaudit.auth_guard import AuthorizationError, require_authorized_private_target
+from camaudit.envcheck import check_environment
 from camaudit.redact import redact_text
 
 app = typer.Typer(help="Defensive local-only IoT camera audit toolkit.")
@@ -27,8 +29,17 @@ def init(path: Path = INIT_PATH_ARGUMENT) -> None:
 
 @app.command("check-env")
 def check_env() -> None:
-    """Placeholder environment checker."""
-    console.print(Panel("Environment checker placeholder. Next: implement envcheck.py."))
+    """Check local tool availability without scanning."""
+    result = check_environment()
+    console.print(f"OS: {result.os_name} {result.os_release}")
+    console.print(f"Python: {result.python_version}")
+
+    table = Table("Tool", "Status", "Version / note")
+    for tool in result.tools:
+        status = "available" if tool.available else "missing"
+        note = tool.version or tool.error or ""
+        table.add_row(tool.name, status, note)
+    console.print(table)
 
 
 @app.command()
