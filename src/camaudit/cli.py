@@ -12,10 +12,12 @@ from camaudit.redact import redact_text
 
 app = typer.Typer(help="Defensive local-only IoT camera audit toolkit.")
 console = Console()
+INIT_PATH_ARGUMENT = typer.Argument(Path("camaudit_project"))
+AUTH_OPTION = typer.Option(False, "--i-am-authorized", help="Confirm authorized testing.")
 
 
 @app.command()
-def init(path: Path = typer.Argument(Path("camaudit_project"))):
+def init(path: Path = INIT_PATH_ARGUMENT) -> None:
     """Create a local audit workspace."""
     for subdir in ["nmap", "wireshark", "cve_research", "reports", "raw"]:
         (path / subdir).mkdir(parents=True, exist_ok=True)
@@ -24,7 +26,7 @@ def init(path: Path = typer.Argument(Path("camaudit_project"))):
 
 
 @app.command("check-env")
-def check_env():
+def check_env() -> None:
     """Placeholder environment checker."""
     console.print(Panel("Environment checker placeholder. Next: implement envcheck.py."))
 
@@ -32,8 +34,8 @@ def check_env():
 @app.command()
 def discover(
     target: str,
-    i_am_authorized: bool = typer.Option(False, "--i-am-authorized", help="Confirm authorized testing."),
-):
+    i_am_authorized: bool = AUTH_OPTION,
+) -> None:
     """Safely discover hosts on an authorized private LAN. Placeholder."""
     try:
         require_authorized_private_target(target, i_am_authorized=i_am_authorized)
@@ -46,8 +48,8 @@ def discover(
 @app.command("scan-host")
 def scan_host(
     target: str,
-    i_am_authorized: bool = typer.Option(False, "--i-am-authorized", help="Confirm authorized testing."),
-):
+    i_am_authorized: bool = AUTH_OPTION,
+) -> None:
     """Safely scan one authorized private host. Placeholder."""
     try:
         require_authorized_private_target(target, i_am_authorized=i_am_authorized)
@@ -59,8 +61,8 @@ def scan_host(
 @app.command()
 def audit(
     target: str,
-    i_am_authorized: bool = typer.Option(False, "--i-am-authorized", help="Confirm authorized testing."),
-):
+    i_am_authorized: bool = AUTH_OPTION,
+) -> None:
     """Run full safe audit. Placeholder."""
     try:
         require_authorized_private_target(target, i_am_authorized=i_am_authorized)
@@ -70,7 +72,7 @@ def audit(
 
 
 @app.command()
-def redact(input_file: Path, output_file: Path, strict: bool = False):
+def redact(input_file: Path, output_file: Path, strict: bool = False) -> None:
     """Redact sensitive material from a text file."""
     redacted = redact_text(input_file.read_text(encoding="utf-8"), strict=strict)
     output_file.write_text(redacted, encoding="utf-8")
@@ -78,14 +80,14 @@ def redact(input_file: Path, output_file: Path, strict: bool = False):
 
 
 @app.command()
-def report(input_file: Path = Path("examples/sanitized_session.json")):
+def report(input_file: Path = Path("examples/sanitized_session.json")) -> None:
     """Placeholder report generator."""
     data = json.loads(input_file.read_text(encoding="utf-8"))
     console.print(Panel.fit(f"Report placeholder loaded session: {data.get('scope', 'unknown')}"))
 
 
 @app.command()
-def demo():
+def demo() -> None:
     """Run demo mode without scanning."""
     demo_file = Path("examples/sanitized_session.json")
     if not demo_file.exists():
