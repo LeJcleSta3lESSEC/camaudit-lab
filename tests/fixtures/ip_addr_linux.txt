@@ -1,0 +1,4 @@
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536
+    inet 127.0.0.1/8 scope host lo
+2: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500
+    inet 10.0.0.42/24 brd 10.0.0.255 scope global dynamic wlan0
