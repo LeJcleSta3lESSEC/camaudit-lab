@@ -21,6 +21,7 @@ INIT_PATH_ARGUMENT = typer.Argument(Path("camaudit_project"))
 AUTH_OPTION = typer.Option(False, "--i-am-authorized", help="Confirm authorized testing.")
 REPORT_INPUT_ARGUMENT = typer.Argument(Path("examples/sanitized_session.json"))
 REPORT_OUTPUT_ARGUMENT = typer.Argument(Path("results/reports/camaudit_report.md"))
+DEMO_REPORT_PATH = Path("results/reports/camaudit_demo_report.md")
 
 
 @app.command()
@@ -131,6 +132,50 @@ def demo() -> None:
     data = json.loads(demo_file.read_text(encoding="utf-8"))
     console.print(Panel.fit("CamAudit Demo Mode — no network scan performed"))
     console.print_json(data=data)
+
+    hosts = data.get("hosts", [])
+    dry_run_table = Table("Step", "What would happen", "Demo data")
+    dry_run_table.add_row(
+        "Discovery",
+        "Would run authorized Nmap ping discovery",
+        f"{len(hosts)} sanitized host(s) loaded",
+    )
+    dry_run_table.add_row(
+        "Port scan",
+        "Would run safe Nmap camera/IoT port scan",
+        "Using stored open_ports values",
+    )
+    dry_run_table.add_row(
+        "Fingerprint",
+        "Would run allowed header, TLS, RTSP OPTIONS, and UDP checks",
+        "Using sanitized notes/findings only",
+    )
+    console.print(dry_run_table)
+
+    host_table = Table("IP", "Vendor", "Type", "Open ports", "Notes")
+    for host in hosts:
+        open_ports = ", ".join(f"TCP/{port}" for port in host.get("open_ports", []))
+        notes = "; ".join(host.get("notes", []))
+        host_table.add_row(
+            host.get("ip", ""),
+            host.get("vendor", "Unknown"),
+            host.get("candidate_type", "unknown"),
+            open_ports,
+            notes,
+        )
+    console.print(host_table)
+
+    finding_table = Table("Finding", "Severity", "Evidence")
+    for finding in data.get("findings", []):
+        finding_table.add_row(
+            finding.get("title", ""),
+            finding.get("severity", ""),
+            finding.get("evidence", ""),
+        )
+    console.print(finding_table)
+
+    report_path = write_markdown_report(data, DEMO_REPORT_PATH)
+    console.print(f"[green]Wrote demo report:[/] {report_path}")
 
 
 if __name__ == "__main__":

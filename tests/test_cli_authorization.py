@@ -74,3 +74,31 @@ def test_scan_host_accepts_authorized_private_target_with_mocked_nmap(monkeypatc
     assert result.exit_code == 0
     assert "Open ports" in result.output
     assert calls == [{"target": "192.168.1.38", "i_am_authorized": True}]
+
+
+def test_demo_mode_uses_sanitized_data_without_scanning(monkeypatch):
+    def fail_discover_hosts(*args, **kwargs):
+        raise AssertionError("demo must not call discover_hosts")
+
+    def fail_scan_host_ports(*args, **kwargs):
+        raise AssertionError("demo must not call scan_host_ports")
+
+    monkeypatch.setattr(cli, "discover_hosts", fail_discover_hosts)
+    monkeypatch.setattr(cli, "scan_host_ports", fail_scan_host_ports)
+    report_path = cli.DEMO_REPORT_PATH
+    if report_path.exists():
+        report_path.unlink()
+
+    try:
+        result = runner.invoke(app, ["demo"])
+
+        assert result.exit_code == 0
+        assert "no network scan performed" in result.output
+        assert "Discovery" in result.output
+        assert "Port scan" in result.output
+        assert "Fingerprint" in result.output
+        assert report_path.exists()
+        assert "# CamAudit Lab Report" in report_path.read_text(encoding="utf-8")
+    finally:
+        if report_path.exists():
+            report_path.unlink()

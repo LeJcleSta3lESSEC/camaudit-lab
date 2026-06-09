@@ -61,6 +61,22 @@ pytest
 camaudit --help
 ```
 
+## Try demo mode first
+
+GitHub reviewers and first-time users can run the demo without scanning any network:
+
+```bash
+camaudit demo
+```
+
+Demo mode loads `examples/sanitized_session.json`, shows what discovery, port scanning, and fingerprinting would look like from sanitized data, and writes a redacted report to:
+
+```text
+results/reports/camaudit_demo_report.md
+```
+
+It does not run Nmap, curl, RTSP probes, UDP checks, credential attempts, feed capture, or device-changing actions.
+
 ## Demo mode goal
 
 The first usable public feature should be:
