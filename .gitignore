@@ -13,9 +13,17 @@ dist/
 
 # Sensitive audit material
 results/raw/
+results/reports/
 *.pcap
 *.pcapng
 *.cap
+*.har
+*.log
+.env
+.env.*
+secrets.*
+*_private.*
+*_raw.*
 screenshots/
 *.jpg
 *.jpeg

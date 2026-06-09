@@ -8,10 +8,10 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from camaudit.artifacts import create_run_id, host_raw_dir
 from camaudit.auth_guard import require_authorized_private_target
 
 DEFAULT_FINGERPRINT_TIMEOUT_SECONDS = 10.0
-DEFAULT_RAW_DIR = Path("results/raw")
 TLS_PORTS = {443, 8443, 10443, 50443}
 HTTP_PORTS = {80, 81, 443, 8000, 8080, 8081, 8443, 5000, 2020, 10443, 50443}
 RTSP_PORTS = {554, 8554, 8800}
@@ -184,7 +184,8 @@ def fingerprint_host(
     *,
     ports: list[int],
     i_am_authorized: bool,
-    raw_dir: Path = DEFAULT_RAW_DIR,
+    raw_dir: Path | None = None,
+    run_id: str | None = None,
     timeout: float = DEFAULT_FINGERPRINT_TIMEOUT_SECONDS,
     allow_localhost: bool = False,
 ) -> HostFingerprintResult:
@@ -193,6 +194,8 @@ def fingerprint_host(
         i_am_authorized=i_am_authorized,
         allow_localhost=allow_localhost,
     )
+    if raw_dir is None:
+        raw_dir = host_raw_dir(run_id or create_run_id(), target)
 
     result = HostFingerprintResult(target=target)
 
@@ -200,7 +203,11 @@ def fingerprint_host(
         if port in TLS_PORTS:
             command = ["nmap", "-Pn", "-n", "--script", "ssl-cert", "-p", str(port), target]
             tls_result = _safe_run(command, timeout=timeout)
-            path = _write_raw(raw_dir, f"tls_ssl_cert_{port}.txt", _combined_output(tls_result))
+            path = _write_raw(
+                raw_dir,
+                f"fingerprint_tls_{port}.txt",
+                _combined_output(tls_result),
+            )
             result.tls.append(
                 parse_tls_certificate(path.read_text(encoding="utf-8"), port=port, path=path)
             )
@@ -217,7 +224,11 @@ def fingerprint_host(
                 url,
             ]
             head_result = _safe_run(head_command, timeout=timeout)
-            head_path = _write_raw(raw_dir, f"http_head_{port}.txt", _combined_output(head_result))
+            head_path = _write_raw(
+                raw_dir,
+                f"fingerprint_http_head_{port}.txt",
+                _combined_output(head_result),
+            )
             result.http.append(
                 parse_http_headers(
                     head_path.read_text(encoding="utf-8"),
@@ -242,7 +253,7 @@ def fingerprint_host(
             get_result = _safe_run(get_command, timeout=timeout)
             get_path = _write_raw(
                 raw_dir,
-                f"http_get_headers_{port}.txt",
+                f"fingerprint_http_get_{port}.txt",
                 _combined_output(get_result),
             )
             result.http.append(
@@ -270,7 +281,11 @@ def fingerprint_host(
                 f"rtsp://{target}:{port}/",
             ]
             rtsp_result = _safe_run(command, timeout=timeout)
-            path = _write_raw(raw_dir, f"rtsp_options_{port}.txt", _combined_output(rtsp_result))
+            path = _write_raw(
+                raw_dir,
+                f"fingerprint_rtsp_{port}.txt",
+                _combined_output(rtsp_result),
+            )
             result.rtsp.append(
                 parse_rtsp_options(path.read_text(encoding="utf-8"), port=port, path=path)
             )
@@ -289,7 +304,11 @@ def fingerprint_host(
         target,
     ]
     udp_result = _safe_run(udp_command, timeout=timeout)
-    udp_path = _write_raw(raw_dir, "udp_discovery.txt", _combined_output(udp_result))
+    udp_path = _write_raw(
+        raw_dir,
+        "fingerprint_udp_discovery.txt",
+        _combined_output(udp_result),
+    )
     result.udp_discovery = parse_udp_discovery(udp_path.read_text(encoding="utf-8"))
 
     return result

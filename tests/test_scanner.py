@@ -152,3 +152,29 @@ def test_scan_host_ports_reports_nmap_failure_after_saving_output(monkeypatch):
     finally:
         if output_path.exists():
             output_path.unlink()
+
+
+def test_scan_host_ports_for_two_hosts_write_to_different_raw_paths(monkeypatch):
+    calls = []
+
+    def fake_run(command, *, capture_output, text, timeout, check):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    first = scan_host_ports("192.168.1.38", i_am_authorized=True, run_id="run123")
+    second = scan_host_ports("192.168.1.109", i_am_authorized=True, run_id="run123")
+
+    try:
+        assert first.raw_output_path != second.raw_output_path
+        assert "run123" in str(first.raw_output_path)
+        assert "192_168_1_38" in str(first.raw_output_path)
+        assert "192_168_1_109" in str(second.raw_output_path)
+        assert first.raw_output_path.name == "nmap_port_scan.txt"
+        assert second.raw_output_path.name == "nmap_port_scan.txt"
+    finally:
+        if first.raw_output_path.exists():
+            first.raw_output_path.unlink()
+        if second.raw_output_path.exists():
+            second.raw_output_path.unlink()

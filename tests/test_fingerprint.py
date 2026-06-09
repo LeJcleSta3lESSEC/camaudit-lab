@@ -122,7 +122,7 @@ def test_fingerprint_host_runs_only_allowed_safe_probes(monkeypatch):
     assert all("SETUP" not in command for command in calls)
     assert all("PLAY" not in command for command in calls)
     assert all("--user" not in command for command in calls)
-    assert (raw_dir / "http_get_headers_443.txt").exists()
+    assert (raw_dir / "fingerprint_http_get_443.txt").exists()
 
 
 def test_fingerprint_host_rejects_public_target_before_probing(monkeypatch):

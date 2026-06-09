@@ -4,11 +4,11 @@ import re
 import subprocess
 from pathlib import Path
 
+from camaudit.artifacts import create_run_id, discovery_output_path
 from camaudit.auth_guard import require_authorized_private_target
 from camaudit.models import DiscoveredHost
 
 DEFAULT_DISCOVERY_TIMEOUT_SECONDS = 60.0
-DEFAULT_RAW_OUTPUT_PATH = Path("results/raw/nmap_discovery.txt")
 
 REPORT_RE = re.compile(r"^Nmap scan report for (?P<subject>.+)$")
 IP_IN_PARENS_RE = re.compile(r"^(?P<hostname>.+)\s+\((?P<ip>\d+\.\d+\.\d+\.\d+)\)$")
@@ -72,7 +72,8 @@ def discover_hosts(
     target: str,
     *,
     i_am_authorized: bool,
-    output_path: Path = DEFAULT_RAW_OUTPUT_PATH,
+    output_path: Path | None = None,
+    run_id: str | None = None,
     timeout: float = DEFAULT_DISCOVERY_TIMEOUT_SECONDS,
     allow_localhost: bool = False,
 ) -> list[DiscoveredHost]:
@@ -81,6 +82,8 @@ def discover_hosts(
         i_am_authorized=i_am_authorized,
         allow_localhost=allow_localhost,
     )
+    if output_path is None:
+        output_path = discovery_output_path(run_id or create_run_id())
 
     command = ["nmap", "-sn", target]
     try:

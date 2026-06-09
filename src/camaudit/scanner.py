@@ -6,6 +6,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
+from camaudit.artifacts import create_run_id, port_scan_output_path
 from camaudit.auth_guard import require_authorized_private_target
 from camaudit.models import OpenPort
 
@@ -29,7 +30,6 @@ DEFAULT_PORTS = (
     50443,
 )
 DEFAULT_SCAN_TIMEOUT_SECONDS = 75.0
-DEFAULT_RAW_OUTPUT_PATH = Path("results/raw/nmap_port_scan.txt")
 PORT_LINE_RE = re.compile(r"^(?P<port>\d+)/(?:tcp)\s+open\s+(?P<service>\S+)?")
 
 
@@ -68,7 +68,8 @@ def scan_host_ports(
     *,
     i_am_authorized: bool,
     ports: tuple[int, ...] | list[int] = DEFAULT_PORTS,
-    output_path: Path = DEFAULT_RAW_OUTPUT_PATH,
+    output_path: Path | None = None,
+    run_id: str | None = None,
     timeout: float = DEFAULT_SCAN_TIMEOUT_SECONDS,
     version_light: bool = False,
     allow_localhost: bool = False,
@@ -78,6 +79,8 @@ def scan_host_ports(
         i_am_authorized=i_am_authorized,
         allow_localhost=allow_localhost,
     )
+    if output_path is None:
+        output_path = port_scan_output_path(run_id or create_run_id(), target)
 
     command = [
         "nmap",
