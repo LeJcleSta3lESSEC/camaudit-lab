@@ -1,0 +1,4 @@
+PORT     STATE         SERVICE
+1900/udp open|filtered upnp
+3702/udp closed        ws-discovery
+5353/udp open|filtered zeroconf

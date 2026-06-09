@@ -12,6 +12,7 @@ from camaudit.auth_guard import AuthorizationError, require_authorized_private_t
 from camaudit.discovery import DiscoveryError, discover_hosts
 from camaudit.envcheck import check_environment
 from camaudit.redact import redact_text
+from camaudit.scanner import ScannerError, scan_host_ports
 
 app = typer.Typer(help="Defensive local-only IoT camera audit toolkit.")
 console = Console()
@@ -72,12 +73,17 @@ def scan_host(
     target: str,
     i_am_authorized: bool = AUTH_OPTION,
 ) -> None:
-    """Safely scan one authorized private host. Placeholder."""
+    """Safely scan one authorized private host."""
     try:
-        require_authorized_private_target(target, i_am_authorized=i_am_authorized)
-    except AuthorizationError as exc:
+        result = scan_host_ports(target, i_am_authorized=i_am_authorized)
+    except (AuthorizationError, ScannerError) as exc:
         raise typer.BadParameter(str(exc)) from exc
-    console.print(f"[yellow]Scan placeholder approved for target:[/] {target}")
+
+    table = Table("Port", "Proto", "Service")
+    for port in result.open_ports:
+        table.add_row(str(port.port), port.proto, port.service or "")
+    console.print(table)
+    console.print(f"[green]Open ports:[/] {len(result.open_ports)}")
 
 
 @app.command()

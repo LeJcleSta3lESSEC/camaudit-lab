@@ -1,0 +1,6 @@
+PORT    STATE SERVICE
+443/tcp open  https
+| ssl-cert: Subject: commonName=camera.local/organizationName=TP-Link
+| Public Key bits: 1024
+| Not valid before: 2024-01-01T00:00:00
+|_Not valid after:  2034-01-01T00:00:00

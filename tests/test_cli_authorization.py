@@ -3,6 +3,7 @@ from typer.testing import CliRunner
 from camaudit import cli
 from camaudit.cli import app
 from camaudit.models import DiscoveredHost
+from camaudit.scanner import PortScanResult
 
 runner = CliRunner()
 
@@ -23,12 +24,11 @@ def test_scan_commands_reject_public_targets_even_with_authorization():
         assert "RFC1918 private range" in result.output
 
 
-def test_scan_and_audit_accept_authorized_private_targets_as_placeholders():
-    for command in ("scan-host", "audit"):
-        result = runner.invoke(app, [command, "192.168.1.0/24", "--i-am-authorized"])
+def test_audit_accepts_authorized_private_target_as_placeholder():
+    result = runner.invoke(app, ["audit", "192.168.1.0/24", "--i-am-authorized"])
 
-        assert result.exit_code == 0
-        assert "placeholder" in result.output.lower()
+    assert result.exit_code == 0
+    assert "placeholder" in result.output.lower()
 
 
 def test_discover_accepts_authorized_private_target_with_mocked_nmap(monkeypatch):
@@ -53,3 +53,24 @@ def test_discover_accepts_authorized_private_target_with_mocked_nmap(monkeypatch
     assert "192.168.1.38" in result.output
     assert "5C:E9:31" in result.output
     assert calls == [{"target": "192.168.1.0/24", "i_am_authorized": True}]
+
+
+def test_scan_host_accepts_authorized_private_target_with_mocked_nmap(monkeypatch):
+    calls = []
+
+    def fake_scan_host_ports(target, *, i_am_authorized):
+        calls.append({"target": target, "i_am_authorized": i_am_authorized})
+        return PortScanResult(
+            target=target,
+            open_ports=[],
+            raw_output_path="results/raw/nmap_port_scan.txt",
+            command=["nmap", "-Pn", "-n"],
+        )
+
+    monkeypatch.setattr(cli, "scan_host_ports", fake_scan_host_ports)
+
+    result = runner.invoke(app, ["scan-host", "192.168.1.38", "--i-am-authorized"])
+
+    assert result.exit_code == 0
+    assert "Open ports" in result.output
+    assert calls == [{"target": "192.168.1.38", "i_am_authorized": True}]

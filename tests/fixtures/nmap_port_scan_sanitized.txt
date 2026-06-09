@@ -1,0 +1,10 @@
+Starting Nmap 7.99
+Nmap scan report for 192.168.1.38
+Host is up (0.0060s latency).
+
+PORT     STATE SERVICE
+80/tcp   open  http
+554/tcp  open  rtsp
+8800/tcp open  sunwebadmin
+
+Nmap done: 1 IP address (1 host up) scanned in 1.23 seconds
