@@ -9,6 +9,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from camaudit.auth_guard import AuthorizationError, require_authorized_private_target
+from camaudit.discovery import DiscoveryError, discover_hosts
 from camaudit.envcheck import check_environment
 from camaudit.redact import redact_text
 
@@ -47,13 +48,23 @@ def discover(
     target: str,
     i_am_authorized: bool = AUTH_OPTION,
 ) -> None:
-    """Safely discover hosts on an authorized private LAN. Placeholder."""
+    """Safely discover hosts on an authorized private LAN."""
     try:
-        require_authorized_private_target(target, i_am_authorized=i_am_authorized)
-    except AuthorizationError as exc:
+        hosts = discover_hosts(target, i_am_authorized=i_am_authorized)
+    except (AuthorizationError, DiscoveryError) as exc:
         raise typer.BadParameter(str(exc)) from exc
-    console.print(f"[yellow]Discovery placeholder approved for target:[/] {target}")
-    console.print("Next: implement nmap -sn wrapper after parser tests exist.")
+
+    table = Table("IP", "Hostname", "MAC OUI", "Vendor", "Latency ms")
+    for host in hosts:
+        table.add_row(
+            host.ip,
+            host.hostname or "",
+            host.mac_oui or "",
+            host.vendor or "",
+            f"{host.latency_ms:.1f}" if host.latency_ms is not None else "",
+        )
+    console.print(table)
+    console.print(f"[green]Discovered hosts:[/] {len(hosts)}")
 
 
 @app.command("scan-host")
