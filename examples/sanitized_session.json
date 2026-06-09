@@ -172,17 +172,17 @@
   "evidence_appendix": [
     {
       "item": "Nmap discovery",
-      "source": "results/raw/nmap_discovery.txt",
+      "source": "results/raw/<run_id>/discovery/nmap_discovery.txt",
       "notes": "Sanitized demo output only."
     },
     {
       "item": "Safe port scan",
-      "source": "results/raw/nmap_port_scan.txt",
+      "source": "results/raw/<run_id>/hosts/192_168_1_38/nmap_port_scan.txt",
       "notes": "Sanitized demo output only."
     },
     {
       "item": "TLS and header fingerprinting",
-      "source": "results/raw/",
+      "source": "results/raw/<run_id>/hosts/192_168_1_38/",
       "notes": "Headers and certificate metadata only; no feed data."
     }
   ],

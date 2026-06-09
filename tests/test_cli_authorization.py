@@ -85,9 +85,12 @@ def test_demo_mode_uses_sanitized_data_without_scanning(monkeypatch):
 
     monkeypatch.setattr(cli, "discover_hosts", fail_discover_hosts)
     monkeypatch.setattr(cli, "scan_host_ports", fail_scan_host_ports)
-    report_path = cli.DEMO_REPORT_PATH
-    if report_path.exists():
-        report_path.unlink()
+    public_report_path = cli.DEMO_PUBLIC_REPORT_PATH
+    internal_report_path = cli.DEMO_INTERNAL_REPORT_PATH
+    if public_report_path.exists():
+        public_report_path.unlink()
+    if internal_report_path.exists():
+        internal_report_path.unlink()
 
     try:
         result = runner.invoke(app, ["demo"])
@@ -97,16 +100,20 @@ def test_demo_mode_uses_sanitized_data_without_scanning(monkeypatch):
         assert "Discovery" in result.output
         assert "Port scan" in result.output
         assert "Fingerprint" in result.output
-        assert report_path.exists()
-        report = report_path.read_text(encoding="utf-8")
+        assert public_report_path.exists()
+        assert not internal_report_path.exists()
+        report = public_report_path.read_text(encoding="utf-8")
         assert "# CamAudit Lab Report" in report
-        assert "1 camera candidate(s)" in report
-        assert "0 camera candidate(s)" not in report
+        assert "HOST-001" in report
+        assert "192.168.1.38" not in report
         assert "No open services recorded." not in report
         assert "No protocol findings recorded." not in report
         assert "No TLS findings recorded." not in report
         assert "TPRI-DEVICE self-signed TLS certificate" in report
         assert "Port 8800 CSeq / RTSP-like response" in report
+        assert "REDACTED_ARTIFACT_PATH" in report
     finally:
-        if report_path.exists():
-            report_path.unlink()
+        if public_report_path.exists():
+            public_report_path.unlink()
+        if internal_report_path.exists():
+            internal_report_path.unlink()

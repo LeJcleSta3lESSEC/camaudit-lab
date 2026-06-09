@@ -2,7 +2,7 @@
 
 ## 1. Scope and authorization
 
-Scope: `192.168.1.0/24 authorized family-owned LAN`
+Scope: `LAB_SUBNET/24 authorized family-owned LAN`
 
 Authorization confirmed: **yes**
 
@@ -14,38 +14,38 @@ CamAudit reviewed 2 discovered host(s), 1 camera candidate(s), and 5 finding(s) 
 
 | Field | Value |
 |---|---|
-| subnet_cidr | 192.168.1.0/24 |
-| default_gateway | 192.168.1.1 |
+| subnet_cidr | LAB_SUBNET/24 |
+| default_gateway | LAB_GATEWAY |
 | note | Sanitized demo context; no live network commands are run in demo mode. |
 
 ## 4. Device inventory
 
 | IP | Hostname | Vendor | MAC OUI | Notes |
 |---|---|---|---|---|
-| 192.168.1.38 |  | TP-Link Systems | 5C:E9:31 | Local HTTPS JSON API observed; TPRI-DEVICE self-signed TLS certificate observed; 1024-bit RSA certificate parameter observed; RTSP standard ports closed |
-| 192.168.1.87 |  | Sony Interactive Entertainment | 70:66:2A | Not a camera candidate |
+| HOST-001 |  | TP-Link Systems | MAC_OUI_REDACTED | Local HTTPS JSON API observed; TPRI-DEVICE self-signed TLS certificate observed; 1024-bit RSA certificate parameter observed; RTSP standard ports closed |
+| HOST-002 |  | Sony Interactive Entertainment | MAC_OUI_REDACTED | Not a camera candidate |
 
 ## 5. Camera candidates
 
 | IP | Type | Score | Reasons |
 |---|---:|---:|---|
-| 192.168.1.38 | camera_candidate | 88 | TP-Link/Tapo-like vendor hint; Open TCP/443 and TCP/8443 local HTTPS services; Open TCP/8800 CSeq/RTSP-like service |
+| HOST-001 | camera_candidate | 88 | TP-Link/Tapo-like vendor hint; Open TCP/443 and TCP/8443 local HTTPS services; Open TCP/8800 CSeq/RTSP-like service |
 
 ## 6. Open services
 
 | IP | Port | Protocol | Service |
 |---|---:|---|---|
-| 192.168.1.38 | 443 | tcp | https-json-api |
-| 192.168.1.38 | 8443 | tcp | https-alt-json-api |
-| 192.168.1.38 | 8800 | tcp | rtsp-like-cseq |
+| HOST-001 | 443 | tcp | https-json-api |
+| HOST-001 | 8443 | tcp | https-alt-json-api |
+| HOST-001 | 8800 | tcp | rtsp-like-cseq |
 
 ## 7. Fingerprinting results
 
 | IP | Type | Port | Evidence |
 |---|---|---:|---|
-| 192.168.1.38 | http | 443 | HTTPS JSON API returned 404/405-style behavior to safe header/root checks; no response body or feed was stored. |
-| 192.168.1.38 | tls | 443 | TPRI-DEVICE self-signed TLS certificate observed with RSA 1024-bit public key. |
-| 192.168.1.38 | rtsp_options | 8800 | Port 8800 returned a CSeq header / RTSP-like response to a safe OPTIONS-style probe. |
+| HOST-001 | http | 443 | HTTPS JSON API returned 404/405-style behavior to safe header/root checks; no response body or feed was stored. |
+| HOST-001 | tls | 443 | TPRI-DEVICE self-signed TLS certificate observed with RSA 1024-bit public key. |
+| HOST-001 | rtsp_options | 8800 | Port 8800 returned a CSeq header / RTSP-like response to a safe OPTIONS-style probe. |
 
 ## 8. RTSP/ONVIF/UPnP findings
 
@@ -89,9 +89,9 @@ CamAudit reviewed 2 discovered host(s), 1 camera candidate(s), and 5 finding(s) 
 
 | Item | Source | Notes |
 |---|---|---|
-| Nmap discovery | results/raw/nmap_discovery.txt | Sanitized demo output only. |
-| Safe port scan | results/raw/nmap_port_scan.txt | Sanitized demo output only. |
-| TLS and header fingerprinting | results/raw/ | Headers and certificate metadata only; no feed data. |
+| Nmap discovery | REDACTED_ARTIFACT_PATH | Sanitized demo output only. |
+| Safe port scan | REDACTED_ARTIFACT_PATH | Sanitized demo output only. |
+| TLS and header fingerprinting | REDACTED_ARTIFACT_PATH | Headers and certificate metadata only; no feed data. |
 
 ## 14. Redaction log
 
