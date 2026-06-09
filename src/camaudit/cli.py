@@ -143,7 +143,7 @@ def demo(
         console.print("[red]Missing examples/sanitized_session.json[/]")
         raise typer.Exit(1)
     data = json.loads(demo_file.read_text(encoding="utf-8"))
-    console.print(Panel.fit("CamAudit Demo Mode — no network scan performed"))
+    console.print(Panel.fit("CamAudit Demo Mode - no network scan performed"))
     console.print_json(data=data)
 
     hosts = data.get("hosts", [])
