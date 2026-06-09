@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from camaudit.redact import redact_text
 
@@ -28,6 +28,52 @@ class ReportData(BaseModel):
     remediation_checklist: list[str] = Field(default_factory=list)
     evidence_appendix: list[dict[str, Any]] = Field(default_factory=list)
     redaction_log: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def populate_derived_sections(self) -> ReportData:
+        if not self.camera_candidates:
+            self.camera_candidates = [
+                {
+                    "ip": host.get("ip", ""),
+                    "candidate_type": host.get("candidate_type", "camera_candidate"),
+                    "candidate_score": host.get("candidate_score", ""),
+                    "reasons": host.get("reasons", host.get("notes", [])),
+                }
+                for host in self.hosts
+                if host.get("candidate_type") == "camera_candidate"
+            ]
+
+        if not self.open_services:
+            self.open_services = [
+                {
+                    "ip": host.get("ip", ""),
+                    "port": port,
+                    "proto": "tcp",
+                    "service": "",
+                }
+                for host in self.hosts
+                for port in host.get("open_ports", [])
+            ]
+
+        if self.findings:
+            if not self.protocol_findings:
+                self.protocol_findings = [
+                    finding
+                    for finding in self.findings
+                    if _matches_any(finding, ("rtsp", "onvif", "upnp", "mdns", "cseq"))
+                ]
+            if not self.tls_findings:
+                self.tls_findings = [
+                    finding
+                    for finding in self.findings
+                    if _matches_any(finding, ("tls", "certificate", "self-signed", "rsa", "1024"))
+                ]
+        return self
+
+
+def _matches_any(item: dict[str, Any], terms: tuple[str, ...]) -> bool:
+    text = " ".join(str(value) for value in item.values()).lower()
+    return any(term in text for term in terms)
 
 
 def _default_summary(data: ReportData) -> str:

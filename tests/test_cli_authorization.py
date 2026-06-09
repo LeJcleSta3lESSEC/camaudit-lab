@@ -98,7 +98,15 @@ def test_demo_mode_uses_sanitized_data_without_scanning(monkeypatch):
         assert "Port scan" in result.output
         assert "Fingerprint" in result.output
         assert report_path.exists()
-        assert "# CamAudit Lab Report" in report_path.read_text(encoding="utf-8")
+        report = report_path.read_text(encoding="utf-8")
+        assert "# CamAudit Lab Report" in report
+        assert "1 camera candidate(s)" in report
+        assert "0 camera candidate(s)" not in report
+        assert "No open services recorded." not in report
+        assert "No protocol findings recorded." not in report
+        assert "No TLS findings recorded." not in report
+        assert "TPRI-DEVICE self-signed TLS certificate" in report
+        assert "Port 8800 CSeq / RTSP-like response" in report
     finally:
         if report_path.exists():
             report_path.unlink()

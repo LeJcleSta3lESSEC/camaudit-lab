@@ -125,3 +125,96 @@ def test_examples_sanitized_session_renders():
 
     assert "# CamAudit Lab Report" in report
     assert "192.168.1.0/24 authorized family-owned LAN" in report
+
+
+def test_demo_report_counts_camera_candidates_from_demo_data():
+    session = json.loads(Path("examples/sanitized_session.json").read_text(encoding="utf-8"))
+
+    report = render_markdown_report(session)
+
+    assert any(host.get("candidate_type") == "camera_candidate" for host in session["hosts"])
+    assert "1 camera candidate(s)" in report
+    assert "0 camera candidate(s)" not in report
+    assert "| 192.168.1.38 | camera_candidate | 88 |" in report
+
+
+def test_demo_report_lists_open_services_when_demo_hosts_have_open_ports():
+    session = json.loads(Path("examples/sanitized_session.json").read_text(encoding="utf-8"))
+
+    report = render_markdown_report(session)
+
+    assert any(host.get("open_ports") for host in session["hosts"])
+    assert "No open services recorded." not in report
+    assert "| 192.168.1.38 | 443 | tcp | https-json-api |" in report
+    assert "| 192.168.1.38 | 8443 | tcp | https-alt-json-api |" in report
+    assert "| 192.168.1.38 | 8800 | tcp | rtsp-like-cseq |" in report
+
+
+def test_demo_report_populates_fingerprint_protocol_and_tls_sections():
+    session = json.loads(Path("examples/sanitized_session.json").read_text(encoding="utf-8"))
+
+    report = render_markdown_report(session)
+
+    assert session["findings"]
+    assert "No fingerprinting results recorded." not in report
+    assert "No protocol findings recorded." not in report
+    assert "No TLS findings recorded." not in report
+    assert "HTTPS JSON API returned 404/405-style behavior" in report
+    assert "TPRI-DEVICE self-signed TLS certificate" in report
+    assert "RSA 1024-bit public key" in report
+    assert "Port 8800 CSeq / RTSP-like response" in report
+    assert "RTSP standard ports closed" in report
+    assert "UPnP/ONVIF/mDNS not observed" in report
+    assert "Weak self-signed local TLS certificate" in report
+
+
+def test_report_derives_candidates_and_services_from_hosts_when_sections_missing():
+    session = {
+        "scope": "192.168.1.0/24 authorized LAN",
+        "authorized": True,
+        "hosts": [
+            {
+                "ip": "192.168.1.38",
+                "candidate_type": "camera_candidate",
+                "candidate_score": 70,
+                "reasons": ["demo host data"],
+                "open_ports": [443, 8800],
+            }
+        ],
+        "findings": [],
+    }
+
+    report = render_markdown_report(session)
+
+    assert "1 camera candidate(s)" in report
+    assert "No camera candidates recorded." not in report
+    assert "No open services recorded." not in report
+    assert "| 192.168.1.38 | 443 | tcp |  |" in report
+    assert "| 192.168.1.38 | 8800 | tcp |  |" in report
+
+
+def test_report_routes_protocol_and_tls_findings_when_sections_missing():
+    session = {
+        "scope": "192.168.1.0/24 authorized LAN",
+        "authorized": True,
+        "hosts": [],
+        "findings": [
+            {
+                "title": "RTSP standard ports closed",
+                "severity": "Positive",
+                "evidence": "TCP/554 and TCP/8554 closed",
+            },
+            {
+                "title": "Weak self-signed local TLS certificate",
+                "severity": "Low",
+                "evidence": "TPRI-DEVICE self-signed certificate with RSA 1024-bit public key.",
+            },
+        ],
+    }
+
+    report = render_markdown_report(session)
+
+    assert "No protocol findings recorded." not in report
+    assert "No TLS findings recorded." not in report
+    assert "RTSP standard ports closed" in report
+    assert "Weak self-signed local TLS certificate" in report

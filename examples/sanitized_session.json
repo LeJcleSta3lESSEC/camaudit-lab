@@ -1,36 +1,194 @@
 {
   "scope": "192.168.1.0/24 authorized family-owned LAN",
   "authorized": true,
+  "executive_summary": "CamAudit reviewed 2 discovered host(s), 1 camera candidate(s), and 5 finding(s) within the authorized scope. No unauthenticated camera feed access was confirmed.",
+  "network_context": {
+    "subnet_cidr": "192.168.1.0/24",
+    "default_gateway": "192.168.1.1",
+    "note": "Sanitized demo context; no live network commands are run in demo mode."
+  },
   "hosts": [
     {
       "ip": "192.168.1.38",
       "vendor": "TP-Link Systems",
       "mac_oui": "5C:E9:31",
       "candidate_type": "camera_candidate",
+      "candidate_score": 88,
+      "reasons": [
+        "TP-Link/Tapo-like vendor hint",
+        "Camera/IoT local service ports observed",
+        "Port 8800 returned a CSeq/RTSP-like response in sanitized lab evidence"
+      ],
       "open_ports": [443, 8443, 8800],
-      "notes": ["Local HTTPS JSON API observed", "RTSP standard ports closed"]
+      "notes": [
+        "Local HTTPS JSON API observed",
+        "TPRI-DEVICE self-signed TLS certificate observed",
+        "1024-bit RSA certificate parameter observed",
+        "RTSP standard ports closed"
+      ]
     },
     {
       "ip": "192.168.1.87",
       "vendor": "Sony Interactive Entertainment",
       "mac_oui": "70:66:2A",
       "candidate_type": "console",
+      "candidate_score": 0,
+      "reasons": ["Known game-console vendor"],
       "open_ports": [],
       "notes": ["Not a camera candidate"]
     }
   ],
+  "camera_candidates": [
+    {
+      "ip": "192.168.1.38",
+      "candidate_type": "camera_candidate",
+      "candidate_score": 88,
+      "reasons": [
+        "TP-Link/Tapo-like vendor hint",
+        "Open TCP/443 and TCP/8443 local HTTPS services",
+        "Open TCP/8800 CSeq/RTSP-like service"
+      ]
+    }
+  ],
+  "open_services": [
+    {
+      "ip": "192.168.1.38",
+      "port": 443,
+      "proto": "tcp",
+      "service": "https-json-api"
+    },
+    {
+      "ip": "192.168.1.38",
+      "port": 8443,
+      "proto": "tcp",
+      "service": "https-alt-json-api"
+    },
+    {
+      "ip": "192.168.1.38",
+      "port": 8800,
+      "proto": "tcp",
+      "service": "rtsp-like-cseq"
+    }
+  ],
+  "fingerprinting_results": [
+    {
+      "ip": "192.168.1.38",
+      "type": "http",
+      "port": 443,
+      "evidence": "HTTPS JSON API returned 404/405-style behavior to safe header/root checks; no response body or feed was stored."
+    },
+    {
+      "ip": "192.168.1.38",
+      "type": "tls",
+      "port": 443,
+      "evidence": "TPRI-DEVICE self-signed TLS certificate observed with RSA 1024-bit public key."
+    },
+    {
+      "ip": "192.168.1.38",
+      "type": "rtsp_options",
+      "port": 8800,
+      "evidence": "Port 8800 returned a CSeq header / RTSP-like response to a safe OPTIONS-style probe."
+    }
+  ],
+  "protocol_findings": [
+    {
+      "title": "RTSP standard ports closed",
+      "severity": "Positive",
+      "evidence": "TCP/554 and TCP/8554 were not reported open.",
+      "explanation": "Standard RTSP feed paths were not exposed during the sanitized lab audit."
+    },
+    {
+      "title": "UPnP/ONVIF/mDNS not observed",
+      "severity": "Info",
+      "evidence": "UDP/1900, UDP/3702, and UDP/5353 were closed or not observed in sanitized evidence.",
+      "explanation": "Common local discovery protocols did not produce exposed camera discovery evidence."
+    },
+    {
+      "title": "Port 8800 CSeq / RTSP-like response",
+      "severity": "Info",
+      "evidence": "TCP/8800 returned a CSeq header in sanitized lab evidence.",
+      "explanation": "The response suggests an RTSP-like or proprietary camera protocol, but no feed access was confirmed."
+    }
+  ],
+  "tls_findings": [
+    {
+      "title": "Weak self-signed local TLS certificate",
+      "severity": "Low",
+      "evidence": "TPRI-DEVICE self-signed certificate with RSA 1024-bit public key.",
+      "explanation": "The local service uses weak TLS certificate parameters, but this finding is limited to local LAN exposure in the sanitized demo.",
+      "remediation": "Update firmware or replace the device certificate if supported."
+    }
+  ],
+  "cve_mapping": [
+    {
+      "component": "TP-Link/Tapo-like camera firmware",
+      "cve": "",
+      "status": "not matched",
+      "notes": "No CVE claim is made from sanitized demo evidence."
+    }
+  ],
   "findings": [
     {
-      "title": "Local camera service exposure",
-      "severity": "Info/Low",
-      "evidence": "TCP/443 and TCP/8800 reachable from LAN",
-      "explanation": "Services are reachable locally but no unauthenticated feed or configuration access was confirmed."
+      "title": "Local HTTPS JSON API reachable",
+      "severity": "Info",
+      "evidence": "TCP/443 and TCP/8443 returned HTTPS JSON API 404/405-style behavior.",
+      "explanation": "Services are reachable locally, but no unauthenticated feed or configuration access was confirmed.",
+      "remediation": "Keep firmware updated and restrict camera services to trusted LAN segments."
+    },
+    {
+      "title": "Weak self-signed local TLS certificate",
+      "severity": "Low",
+      "evidence": "TPRI-DEVICE self-signed certificate with RSA 1024-bit public key.",
+      "explanation": "The local service uses weak TLS certificate parameters.",
+      "remediation": "Update firmware or replace the device certificate if supported."
+    },
+    {
+      "title": "Port 8800 CSeq / RTSP-like response",
+      "severity": "Info",
+      "evidence": "TCP/8800 returned a CSeq header in sanitized lab evidence.",
+      "explanation": "The response suggests an RTSP-like or proprietary camera protocol. No unauthenticated feed access was confirmed.",
+      "remediation": "Restrict access to trusted LAN segments and disable the service if it is unnecessary."
     },
     {
       "title": "RTSP standard ports closed",
       "severity": "Positive",
-      "evidence": "TCP/554 and TCP/8554 closed",
-      "explanation": "Standard RTSP feed paths were not exposed during the audit."
+      "evidence": "TCP/554 and TCP/8554 were not reported open.",
+      "explanation": "Standard RTSP feed paths were not exposed during the sanitized lab audit."
+    },
+    {
+      "title": "UPnP/ONVIF/mDNS not observed",
+      "severity": "Info",
+      "evidence": "UDP/1900, UDP/3702, and UDP/5353 were closed or not observed in sanitized evidence.",
+      "explanation": "Common local discovery protocols did not produce exposed camera discovery evidence."
     }
+  ],
+  "remediation_checklist": [
+    "Keep camera firmware updated.",
+    "Keep camera services restricted to trusted LAN or IoT VLAN segments.",
+    "Disable RTSP unless needed.",
+    "Disable UPnP on the router where possible.",
+    "Do not expose camera services to the internet."
+  ],
+  "evidence_appendix": [
+    {
+      "item": "Nmap discovery",
+      "source": "results/raw/nmap_discovery.txt",
+      "notes": "Sanitized demo output only."
+    },
+    {
+      "item": "Safe port scan",
+      "source": "results/raw/nmap_port_scan.txt",
+      "notes": "Sanitized demo output only."
+    },
+    {
+      "item": "TLS and header fingerprinting",
+      "source": "results/raw/",
+      "notes": "Headers and certificate metadata only; no feed data."
+    }
+  ],
+  "redaction_log": [
+    "Full MAC addresses are reduced to OUI prefixes.",
+    "Public IPs, emails, serials, UIDs, tokens, and media filenames are redacted.",
+    "No camera feed images or video are stored in this demo."
   ]
 }
