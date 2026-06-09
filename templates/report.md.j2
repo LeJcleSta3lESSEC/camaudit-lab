@@ -1,29 +1,127 @@
-# CamAudit Report
+# CamAudit Lab Report
 
-## Scope
+## 1. Scope and authorization
 
-{{ scope }}
+Scope: `{{ report.scope }}`
 
-## Executive Summary
+Authorization confirmed: **{{ "yes" if report.authorized else "no" }}**
+
+## 2. Executive summary
 
 {{ executive_summary }}
 
-## Device Inventory
+## 3. Network context
 
-{% for host in hosts %}
-- {{ host.ip }} — {{ host.vendor or "Unknown" }} — {{ host.mac_oui or "No OUI" }}
+| Field | Value |
+|---|---|
+{% for key, value in report.network_context.items() %}
+| {{ key }} | {{ value }} |
+{% else %}
+| Status | No network context recorded. |
 {% endfor %}
 
-## Findings
+## 4. Device inventory
 
-{% for finding in findings %}
-### {{ finding.title }}
+| IP | Hostname | Vendor | MAC OUI | Notes |
+|---|---|---|---|---|
+{% for host in report.hosts %}
+| {{ host.ip }} | {{ host.hostname | default("", true) }} | {{ host.vendor | default("Unknown", true) }} | {{ host.mac_oui | default("", true) }} | {{ host.notes | default([], true) | join("; ") }} |
+{% else %}
+| None |  |  |  | No hosts recorded. |
+{% endfor %}
 
-Severity: **{{ finding.severity }}**
+## 5. Camera candidates
 
-Evidence: {{ finding.evidence }}
+| IP | Type | Score | Reasons |
+|---|---:|---:|---|
+{% for candidate in report.camera_candidates %}
+| {{ candidate.ip }} | {{ candidate.candidate_type }} | {{ candidate.candidate_score }} | {{ candidate.reasons | default([], true) | join("; ") }} |
+{% else %}
+| None |  |  | No camera candidates recorded. |
+{% endfor %}
 
-Explanation: {{ finding.explanation }}
+## 6. Open services
 
-{% if finding.remediation %}Remediation: {{ finding.remediation }}{% endif %}
+| IP | Port | Protocol | Service |
+|---|---:|---|---|
+{% for service in report.open_services %}
+| {{ service.ip }} | {{ service.port }} | {{ service.proto | default("tcp", true) }} | {{ service.service | default("", true) }} |
+{% else %}
+| None |  |  | No open services recorded. |
+{% endfor %}
+
+## 7. Fingerprinting results
+
+| IP | Type | Port | Evidence |
+|---|---|---:|---|
+{% for item in report.fingerprinting_results %}
+| {{ item.ip }} | {{ item.type }} | {{ item.port | default("", true) }} | {{ item.evidence }} |
+{% else %}
+| None |  |  | No fingerprinting results recorded. |
+{% endfor %}
+
+## 8. RTSP/ONVIF/UPnP findings
+
+| Title | Severity | Evidence |
+|---|---|---|
+{% for item in report.protocol_findings %}
+| {{ item.title }} | {{ item.severity }} | {{ item.evidence }} |
+{% else %}
+| None |  | No protocol findings recorded. |
+{% endfor %}
+
+## 9. TLS findings
+
+| Title | Severity | Evidence |
+|---|---|---|
+{% for item in report.tls_findings %}
+| {{ item.title }} | {{ item.severity }} | {{ item.evidence }} |
+{% else %}
+| None |  | No TLS findings recorded. |
+{% endfor %}
+
+## 10. CVE mapping
+
+| Component | CVE | Status | Notes |
+|---|---|---|---|
+{% for item in report.cve_mapping %}
+| {{ item.component }} | {{ item.cve | default("", true) }} | {{ item.status }} | {{ item.notes | default("", true) }} |
+{% else %}
+| None |  | Not assessed | No CVE mapping recorded. |
+{% endfor %}
+
+## 11. Severity table
+
+| Finding | Severity | Evidence |
+|---|---|---|
+{% for finding in report.findings %}
+| {{ finding.title }} | {{ finding.severity }} | {{ finding.evidence }} |
+{% else %}
+| None |  | No findings recorded. |
+{% endfor %}
+
+## 12. Remediation checklist
+
+{% for item in report.remediation_checklist %}
+- {{ item }}
+{% else %}
+- No remediation items recorded.
+{% endfor %}
+
+## 13. Evidence appendix
+
+| Item | Source | Notes |
+|---|---|---|
+{% for item in report.evidence_appendix %}
+| {{ item.item }} | {{ item.source }} | {{ item.notes | default("", true) }} |
+{% else %}
+| None |  | No evidence appendix entries recorded. |
+{% endfor %}
+
+## 14. Redaction log
+
+{% for item in report.redaction_log %}
+- {{ item }}
+{% else %}
+- Report rendered through CamAudit redaction before writing.
 {% endfor %}

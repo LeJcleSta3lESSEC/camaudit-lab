@@ -12,12 +12,15 @@ from camaudit.auth_guard import AuthorizationError, require_authorized_private_t
 from camaudit.discovery import DiscoveryError, discover_hosts
 from camaudit.envcheck import check_environment
 from camaudit.redact import redact_text
+from camaudit.report import write_markdown_report
 from camaudit.scanner import ScannerError, scan_host_ports
 
 app = typer.Typer(help="Defensive local-only IoT camera audit toolkit.")
 console = Console()
 INIT_PATH_ARGUMENT = typer.Argument(Path("camaudit_project"))
 AUTH_OPTION = typer.Option(False, "--i-am-authorized", help="Confirm authorized testing.")
+REPORT_INPUT_ARGUMENT = typer.Argument(Path("examples/sanitized_session.json"))
+REPORT_OUTPUT_ARGUMENT = typer.Argument(Path("results/reports/camaudit_report.md"))
 
 
 @app.command()
@@ -108,10 +111,14 @@ def redact(input_file: Path, output_file: Path, strict: bool = False) -> None:
 
 
 @app.command()
-def report(input_file: Path = Path("examples/sanitized_session.json")) -> None:
-    """Placeholder report generator."""
+def report(
+    input_file: Path = REPORT_INPUT_ARGUMENT,
+    output_file: Path = REPORT_OUTPUT_ARGUMENT,
+) -> None:
+    """Generate a redacted Markdown report."""
     data = json.loads(input_file.read_text(encoding="utf-8"))
-    console.print(Panel.fit(f"Report placeholder loaded session: {data.get('scope', 'unknown')}"))
+    output_path = write_markdown_report(data, output_file)
+    console.print(f"[green]Wrote report:[/] {output_path}")
 
 
 @app.command()
